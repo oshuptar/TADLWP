@@ -7,17 +7,20 @@ from typing import Optional, Tuple
 class _DenseFn(Function):
     @staticmethod
     def forward(ctx, x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) -> torch.Tensor:
-        y = None
-        raise NotImplementedError("TODO: Implement the forward pass")
+        y = x.matmul(weight.t()) + bias; # recycling is happening in case of bias
         ctx.save_for_backward(x, weight, bias)
         return y
 
     @staticmethod
     def backward(ctx, grad_out: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         x, weight, bias = ctx.saved_tensors
-        N = x.shape[0]
-        grad_x = grad_w = grad_b = None
-        raise NotImplementedError("TODO: Implement the backward pass - compute gradients for x, weight, and bias")
+        print(grad_out.shape)
+        if x.requires_grad and grad_out is not None:
+            grad_x = grad_out.matmul(weight) # the number of columns are out_features. The number of rows are in_features
+        if weight.requires_grad and grad_out is not None:
+            grad_w = (x.t().matmul(grad_out)).t() # grad_out.t().matmul(x)
+        if bias.requires_grad and grad_out is not None:
+            grad_b = grad_out
         return grad_x, grad_w, grad_b
 
 class Dense(nn.Module):
