@@ -9,44 +9,30 @@ from experiment_logger_dense import ExperimentWithDense
 
 
 def create_simple_model(input_size: int = 2, hidden_size: int = 4, output_size: int = 1) -> nn.Sequential:
-    """
-    Create a simple model with Dense layers.
-    
-    TODO: Implement a neural network with:
-    - 1 Dense layer from input_size to hidden_size
-    - ReLU activation (nn.ReLU())
-    - 1 Dense layer from hidden_size to output_size  
-    - No activation function at the end — do NOT add Sigmoid.
-        BCEWithLogitsLoss (used later during training) already includes
-        a numerically stable sigmoid internally.
-    
-    Args:
-        input_size: Input feature size
-        hidden_size: Hidden layer size
-        output_size: Output size
-        
-    Returns:
-        model: PyTorch Sequential model
-    """
-    model = nn.Sequential()
-    raise NotImplementedError("TODO: Implement the neural network with Dense layers, ReLU, and Sigmoid")
+    model = nn.Sequential(nn.Linear(in_features=input_size, out_features=hidden_size),
+                          nn.ReLU(),
+                          nn.Linear(in_features=hidden_size, out_features=output_size));
     return model
 
 def train_model(experiment: ExperimentWithDense, model: nn.Module, dataloader: DataLoader, epochs: int = 100):
-    """
-    Train a model on the given dataset.
-    
-    TODO: Implement training loop for a model that will take epochs amount of iterations.
-    Use PyTorch's SGD optimizer: optim.SGD(model.parameters(), lr=...) and BCEWithLogitsLoss, print result loss.
-    Every 10 epochs:
+    optimizer = optim.SGD(model.parameters(), lr=0.01);
+    criterion = nn.BCEWithLogitsLoss();
+    model.train(); # sets model to training model
+    for epoch in range(epochs):
+        epoch_loss = 0.0
+        for x, y in dataloader:
+            optimizer.zero_grad(); # zeroes the gradient, due ot cummulative nature of gradients
+            pred = model(x).squeeze(dim = 1); # squeezes the second column dimension, i.e. is the column dim is of size 1 - it removes it
+            #print(pred.shape);
+            loss = criterion(pred, y);
+            loss.backward(); # computes gradients via autograd saves the results in the .grad property of tensors
+            optimizer.step(); # step of the optimizer function (SGD step here)
+            epoch_loss += loss.item();
+        
         if epoch % 10 == 0:
             print(f"Epoch {epoch}, Loss: {epoch_loss:.4f}")
-            experiment.log_training_step(model, epoch_loss / len(dataloader))
-    and call experiment.log_training_step(model, mean_epoch_loss) to save the results for visualization.
+            experiment.log_training_step(model, epoch_loss/len(dataloader))
 
-    Hint: Use for X, y in dataloader: to iterate through batches
-    """
-    raise NotImplementedError("TODO: Implement the training loop with SGD optimizer and BCEWithLogitsLoss")
 
 def part2():
     """
