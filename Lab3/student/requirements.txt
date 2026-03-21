@@ -1,0 +1,17 @@
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+torchviz
+torchview
+streamlit
+numpy
+ipykernel
+wonderwords
+matplotlib
+plotly
+altair
+pandas
+scikit-learn
+seaborn
+imblearn
+transformers
+datasets
+evaluate
