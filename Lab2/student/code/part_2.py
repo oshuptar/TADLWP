@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
-from typing import List
+from typing import Iterable, List
 from myImplementation.dense import Dense
 from helpers import generate_simple_line_seperated_dataset, evaluate_model, visualize_dataset, visualize_predictions
 from experiment_logger_dense import ExperimentWithDense
@@ -27,11 +27,21 @@ def train_model(experiment: ExperimentWithDense, model: nn.Module, dataloader: D
             loss = criterion(pred, y);
             loss.backward(); # computes gradients via autograd saves the results in the .grad property of tensors
             optimizer.step(); # step of the optimizer function (SGD step here)
+            # optimize(model.parameters(), 0.01);
             epoch_loss += loss.item();
         
         if epoch % 10 == 0:
             print(f"Epoch {epoch}, Loss: {epoch_loss:.4f}")
             experiment.log_training_step(model, epoch_loss/len(dataloader))
+
+def optimize(parameters: Iterable[torch.nn.Parameter], learning_rate: float):
+    for parameter in parameters:
+        if parameter.requires_grad:
+            with torch.no_grad():
+                if parameter.grad is not None:
+                    parameter.data = parameter.data - learning_rate * parameter.grad;
+
+
 
 
 def part2():
