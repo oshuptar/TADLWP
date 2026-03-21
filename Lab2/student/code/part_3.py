@@ -11,45 +11,51 @@ from helpers import (
 from experiment_logger_dense import ExperimentWithDense
 
 def create_complex_model(input_size: int = 2, hidden_sizes: List[int] = [64, 32, 16, 8], output_size: int = 1) -> nn.Sequential:
-    """
-    Create a complex model with multiple Dense layers.
-
-    TODO: Implement a deep neural network with multiple hidden layers.
-    For each hidden_size in hidden_sizes, add:
-    - 1 Dense layer from prev_size to hidden_size
-    - Tanh activation (nn.Tanh())
-    - Update prev_size = hidden_size
-    Finally add:
-    - 1 Dense layer from prev_size to output_size
-
-    Args:
-        input_size: Input feature size
-        hidden_sizes: List of hidden layer sizes
-        output_size: Output size
-
-    Returns:
-        model: PyTorch Sequential model
-    """
     layers = []
-    raise NotImplementedError("TODO: Implement the neural network with Dense layers, ReLU, and Sigmoid")
+    prev_size: int = input_size;
+    for hidden_size in hidden_sizes:
+        layers.append(nn.Linear(in_features=prev_size, out_features=hidden_size));
+        layers.append(nn.Tanh())
+        prev_size = hidden_size
+    # appending last layer:
+    layers.append(nn.Linear(in_features=prev_size, out_features=output_size))
+    layers.append(nn.Tanh())
     model = nn.Sequential(*layers)
     return model
 
 def train_model(experiment: ExperimentWithDense, model: nn.Module, dataloader: DataLoader, epochs: int = 200):
-    """
-    Train a model on the given dataset.
+    loss_history: list[float] = []
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu");
+    model.to(device);
+    optimizer = optim.SGD(model.parameters(), lr  = 0.01);
+    criterion = nn.MSELoss();
+    model.train(); # make sure the model is in training mode
+    for epoch in range (epochs):
+        epoch_loss: float = 0.0;
+        for x,y in dataloader:
+            x, y = x.to(device), y.to(device);
+            optimizer.zero_grad();
+            pred = model(x).squeeze(dim = 1);
+            loss = criterion(pred, y);
+            loss.backward();
+            optimizer.step();   
+            epoch_loss += loss.item();
+    
+        
+        loss_history.append(epoch_loss / len(dataloader));
+        if epoch % 50 == 0:
+            print(f"Epoch {epoch}, Loss: {epoch_loss: .4f}")
+            experiment.log_training_step(model, epoch_loss/len(dataloader))
 
-    TODO: Create a training loop similar to the one in part 2 but also save the loss so it can be used by plot_training_progress from helpers.py function to plot the loss at the end.
-    Use the visualize_predictions(X, y, predictions, "Model Progress at Epoch " + str(epoch)) to visualize how the prediction changes every 100 epochs.
-    Add some checks for example: 
-        if epoch % 50 == 49:
-            print(f"Epoch {epoch}, Loss: {epoch_loss:.4f}")
-            experiment.log_training_step(model, epoch_loss / len(dataloader))
-    Also add some checks every other amount of epochs to also plot the predictions compared to correct data.
-    Return the losses list at the end of the training (use: losses.append(epoch_loss / len(dataloader)))
-    """
-    raise NotImplementedError("TODO: Implement the training loop with loss tracking and visualizations")
+        if epoch % 100 == 99:
+            with torch.no_grad():
+                x = dataloader.dataset.tensors[0]
+                y = dataloader.dataset.tensors[1]
+                pred = model(x).squeeze(dim=1)
+                visualize_predictions(x.detach(), y.detach(), pred.detach(), f"Mode progress at Epoch {str(epoch)}");
+
     plot_training_progress(loss_history)
+    return loss_history;
 
 def part3():
     """

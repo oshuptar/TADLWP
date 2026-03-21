@@ -16,7 +16,7 @@ def create_simple_model(input_size: int = 2, hidden_size: int = 4, output_size: 
 
 def train_model(experiment: ExperimentWithDense, model: nn.Module, dataloader: DataLoader, epochs: int = 100):
     optimizer = optim.SGD(model.parameters(), lr=0.01);
-    criterion = nn.BCEWithLogitsLoss();
+    criterion = nn.MSELoss();
     model.train(); # sets model to training model
     for epoch in range(epochs):
         epoch_loss = 0.0
