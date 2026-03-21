@@ -39,12 +39,16 @@ Key concepts:
 
 
 def create_model(input_size: int, num_classes: int) -> nn.Module:
-    """
-    TODO: Implement the model with Dense layers 
-    Hint: You can use Sequential, nn.Linear and nn.ReLU, around 3-4 layers should be enough
-    """
-    raise NotImplementedError("TODO: Implement the model with Dense layers using Sequential")
-    return model
+    model = nn.Sequential(
+        nn.Linear(in_features=input_size, out_features=64),
+        nn.ReLU(),
+        nn.Linear(in_features=64, out_features=32),
+        nn.ReLU(),
+        nn.Linear(in_features=32, out_features=16),
+        nn.ReLU(),
+        nn.Linear(in_features=16, out_features=num_classes)
+    );
+    return model;
 
 
 def create_data_loaders(
@@ -56,11 +60,12 @@ def create_data_loaders(
     y_test: np.ndarray,
     batch_size: int = 64,
 ) -> Tuple[DataLoader[Any], DataLoader[Any], DataLoader[Any]]:
-    """
-    TODO: Implement the data loaders
-    Hint: You can use TensorDataset and DataLoader
-    """
-    raise NotImplementedError("TODO: Implement the data loaders")
+    train_dataset = TensorDataset(torch.from_numpy(X_train).float(), torch.from_numpy(y_train).long());
+    val_dataset = TensorDataset(torch.from_numpy(X_val).float(), torch.from_numpy(y_val).long());
+    test_dataset = TensorDataset(torch.from_numpy(X_test).float(), torch.from_numpy(y_test).long());
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=batch_size);
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False);
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False);
     return train_loader, val_loader, test_loader
 
 
@@ -83,25 +88,31 @@ def train_model_with_history(
         'val_loss': [],
         'val_acc': []
     }
-    model = model.to(device)
+    model = model.to(device);
     for epoch in range(1, epochs + 1):
         verbose_epoch = epoch % 10 == 0 or epoch == epochs
         running_loss = 0.0
         correct = 0
         total = 0
+        model.train();
         if verbose_epoch:
             hook_handles, parameters_from_epoch_start, old_parameters = setup_epoch_logging(model, experiment)
         for inputs, targets in train_loader:
-            """
-            TODO: Implement the training iteration
-            Hint: You can use optimizer.zero_grad(), optimizer.step(), loss.backward()
-            """
-            raise NotImplementedError("TODO: Implement the training iteration")
+            inputs, targets = inputs.to(device), targets.to(device);
+            optimizer.zero_grad();
+            pred_targets = model(inputs);
+            loss = criterion(pred_targets, targets);
+            running_loss += loss.item() * inputs.size(dim = 0);
+            loss.backward();
+            optimizer.step();
+
+            correct += (pred_targets.argmax(dim = 1) == targets).sum().item()
+            total += inputs.size(dim = 0);
+
             if verbose_epoch:
                 old_parameters = log_batch_step(old_parameters, model, experiment)
-        # TODO: calculate train loss and train accuracy from running_loss, correct, total
-        train_loss = 0.0  # replace: running_loss / len(train_loader.dataset)
-        train_acc = 0.0  # replace: correct / total
+        train_loss = running_loss/len(train_loader.dataset);
+        train_acc = correct/total;
         if verbose_epoch:
             finalize_epoch_logging(hook_handles, parameters_from_epoch_start, old_parameters, experiment)
         val_loss, val_acc = evaluate(model, val_loader, criterion, device)
