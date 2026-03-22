@@ -34,27 +34,28 @@ After implementation, run experiments to find the best combination of weight ini
 """
 
 def init_model_xavier(model: nn.Module) -> None:
-    """
-    TODO: Implement Xavier uniform initialization for Linear layers.
-    Hint: nn.init.xavier_uniform_(module.weight), nn.init.constant_(module.bias, 0.0)
-    """
-    raise NotImplementedError("TODO: Implement init_model_xavier")
+    for module in model.modules():
+        if isinstance(module, nn.Linear):
+            nn.init.xavier_uniform_(module.weight);
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0.0); 
 
 
 def init_model_kaiming(model: nn.Module) -> None:
-    """
-    TODO: Implement Kaiming uniform initialization for Linear layers (ReLU).
-    Hint: nn.init.kaiming_uniform_(module.weight, nonlinearity='relu')
-    """
-    raise NotImplementedError("TODO: Implement init_model_kaiming")
+    for module in model.modules():
+        if isinstance(module, nn.Linear):
+            nn.init.kaiming_uniform_(module.weight, nonlinearity='relu');
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0.0);
+    
 
 
 def init_model_uniform(model: nn.Module) -> None:
-    """
-    TODO: Implement uniform initialization for Linear layers (e.g. -0.1, 0.1).
-    Hint: nn.init.uniform_(module.weight, -0.1, 0.1)
-    """
-    raise NotImplementedError("TODO: Implement init_model_uniform")
+    for module in model.modules():
+        if isinstance(module, nn.Linear):
+            nn.init.uniform_(module.weight, -0.1, 0.1);
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0.0);
 
 
 def init_model_normal(model: nn.Module) -> None:
@@ -62,31 +63,29 @@ def init_model_normal(model: nn.Module) -> None:
     TODO: Implement normal initialization for Linear layers (mean=0, std=0.1).
     Hint: nn.init.normal_(module.weight, 0.0, 0.1)
     """
-    raise NotImplementedError("TODO: Implement init_model_normal")
+    for module in model.modules():
+        if isinstance(module, nn.Linear):
+            nn.init.normal_(module.weight, mean=0.0, std=0.1);
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0.0);
 
 
 def create_learning_rate_list() -> List[float]:
-    """
-    TODO: Implement learning rate list
-    """
-    raise NotImplementedError("TODO: Implement learning rate list")
+    return [multiplier*10**(exp) 
+            for exp in range (-6,0) 
+            for multiplier in [1,2,3]];
 
 def create_batch_size_list() -> List[int]:
-    """
-    TODO: Implement batch size list
-    """
-    raise NotImplementedError("TODO: Implement batch size list")
+    return [2 ** exp for exp in range(0, 8)];
+    
 
 def create_momentum_list() -> List[float]:
-    """
-    TODO: Implement momentum list
-    """
-    raise NotImplementedError("TODO: Implement momentum list")
+    return [0.0, 0.5, 0.9, 0.95, 0.99];
 
 
 def main():
     run_experiments(
-        balance_method_list=['weighted_sampler'],
+        balance_method_list=[None, 'oversample', 'class_weight', 'weighted_sampler'],
         weight_initialization_list=[
             init_model_xavier,
             init_model_kaiming,
