@@ -72,7 +72,7 @@ def init_model_normal(model: nn.Module) -> None:
 
 def create_learning_rate_list() -> List[float]:
     return [multiplier*10**(exp) 
-            for exp in range (-6,0) 
+            for exp in range (-3,0) 
             for multiplier in [1,2,3]];
 
 def create_batch_size_list() -> List[int]:
