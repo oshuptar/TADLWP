@@ -47,20 +47,15 @@ def apply_oversampling(
     random_state: int = 42,
     verbose: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    TODO: Implement oversampling
-    Hint: You can use RandomOverSampler from imblearn.over_sampling
-    """
-    raise NotImplementedError("TODO: Implement oversampling")
+    randomOverSampler = RandomOverSampler(sampling_strategy="auto", random_state=42)
+    resampled: Tuple[np.ndarray, np.ndarray] = randomOverSampler.fit_resample(X_train, y_train)
+    X_resampled, y_resampled = resampled
     return X_resampled, y_resampled
 
 # Method 2: Class-weighted loss - penalize minority class errors more
 def create_class_weighted_criterion(y_train: np.ndarray, device: Optional[torch.device] = None) -> nn.CrossEntropyLoss:
-    """
-    TODO: Implement class-weighted loss
-    Hint: You can use _calculate_class_weights. Move weights to device so they match model outputs (required when using GPU).
-    """
-    raise NotImplementedError("TODO: Implement class-weighted loss")
+    weights, _ =_calculate_class_weights(y_train=y_train)
+    weights.to(device=device);
     return nn.CrossEntropyLoss(weight=weights)
 
 
@@ -74,11 +69,17 @@ def create_weighted_sampler_data_loaders(
     y_test: np.ndarray,
     batch_size: int = 64,
 ) -> Tuple[DataLoader[Any], DataLoader[Any], DataLoader[Any]]:
-    """
-    TODO: Implement weighted sampling
-    Hint: You can use WeightedRandomSampler from torch.utils.data
-    """
-    raise NotImplementedError("TODO: Implement weighted sampling")
+    train_dataset = TensorDataset(torch.from_numpy(X_train).float(), torch.from_numpy(y_train).long());
+    val_dataset = TensorDataset(torch.from_numpy(X_val).float(), torch.from_numpy(y_val).long());
+    test_dataset = TensorDataset(torch.from_numpy(X_test).float(), torch.from_numpy(y_test).long());
+
+    _, class_to_weight = _calculate_class_weights(y_train=y_train);
+    weights = [class_to_weight[c] for c in y_train]
+    weightedRandomSampler = WeightedRandomSampler(weights=weights, num_samples=len(weights));
+
+    train_loader = DataLoader(dataset=train_dataset, sampler=weightedRandomSampler, shuffle=False, batch_size=batch_size);
+    val_loader = DataLoader(dataset=val_dataset, shuffle=False, batch_size=batch_size);
+    test_loader = DataLoader(dataset=test_dataset, shuffle=False, batch_size=batch_size);
     return train_loader, val_loader, test_loader
 
 
