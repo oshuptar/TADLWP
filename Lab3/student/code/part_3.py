@@ -76,11 +76,11 @@ def create_learning_rate_list() -> List[float]:
             for multiplier in [1,2,3]];
 
 def create_batch_size_list() -> List[int]:
-    return [2 ** exp for exp in range(0, 8)];
+    return [2 ** exp for exp in range(3, 8)];
     
 
 def create_momentum_list() -> List[float]:
-    return [0.0, 0.5, 0.9, 0.95, 0.99];
+    return [0.0, 0.9, 0.95, 0.99];
 
 
 def main():
