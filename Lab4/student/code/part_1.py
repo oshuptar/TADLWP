@@ -12,18 +12,50 @@ from helpers.training_utils import (
 from helpers.experiment_logger import Experiment
 
 def create_model(sequence_length: int = 100, num_filters: int = 3, num_classes: int = 5) -> nn.Sequential:
-    """
-    TODO: Create a 1D CNN model using nn.Sequential with Conv1d, ReLU, MaxPool1d, Flatten, and Linear layers.
-    The MaxPool1d reduces the sequence length by half, so calculate the Linear input size accordingly.
-    """
-    raise NotImplementedError("TODO: Implement the model creation")
+    kernel_size, stride, padding = 3,1,1;
+    output_length = 1 + (sequence_length + 2*padding - kernel_size)//stride;
+    max_kernel, max_stride, max_padding = 2, 2, 0;
+    pooled_length = (output_length - max_kernel)//max_stride + 1
+    model = nn.Sequential(
+        nn.Conv1d(in_channels=1,
+                   out_channels=num_filters,
+                   kernel_size = kernel_size,
+                   stride = stride,
+                   padding=padding
+                   ),
+        nn.ReLU(),
+        nn.MaxPool1d(kernel_size=max_kernel, stride=max_stride, padding=max_padding),
+        nn.Flatten(),
+        # do not forget to multiply the flattened length by the number of filters
+        nn.Linear(in_features = pooled_length * num_filters, out_features=32),
+        nn.ReLU(),
+        nn.Linear(in_features = 32, out_features=num_classes*2),
+        nn.ReLU(),
+        nn.Linear(in_features = num_classes*2, out_features = num_classes)
+        );
+    return model;
 
-def evaluate(model, loader, criterion, device, flatten_input=False):
-    """
-    TODO: Set model to eval mode and use torch.no_grad(). Iterate through loader, compute outputs and loss,
-    accumulate metrics. Return average loss and accuracy.
-    """
-    raise NotImplementedError("TODO: Implement the evaluation")
+def evaluate(model, loader, criterion, device, flatten_input=False) -> tuple[float, float]:
+    model.eval();
+    loss, correct, total = 0.0, 0, 0;
+    model.to(device);
+    with torch.no_grad():
+        for X, y in loader:
+            X, y = X.to(device), y.to(device);
+
+            if flatten_input:
+                X = X.reshape(X.size(dim = 0), -1); # preserve the batch dimension. calculate the size for the rest automatically
+
+            pred = model(X);
+            loss += criterion(pred, y).item();
+            correct += (pred.argmax(dim = 1) == y).sum().item();
+            total += X.size(dim = 0);
+    
+    print("y true:", y.numpy())
+    print("preds :", pred)
+    val_loss, val_acc = loss/len(loader), correct/total;
+    return val_loss, val_acc
+
 
 def train_model_with_history(model, train_loader, val_loader, criterion,
                              learning_rate=0.001, momentum=0.9, epochs=10,
@@ -32,7 +64,38 @@ def train_model_with_history(model, train_loader, val_loader, criterion,
     TODO: Setup device and SGD optimizer. For each epoch, train the model (forward, backward, optimizer step) and
     accumulate training metrics. Evaluate on validation set and print results. Return trained model.
     """
-    raise NotImplementedError("TODO: Implement the training loop with SGD optimizer and BCEWithLogitsLoss")
+    device = get_device();
+    model.to(device);
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum);
+    for epoch in range(epochs):
+        model.train(); # do not forget to reset model to training after evaluation!s
+        epoch_loss, correct, total = 0.0, 0, 0;
+        for X, y in train_loader:
+            optimizer.zero_grad();
+            X, y = X.to(device), y.to(device);
+
+            if flatten_input:
+                X = X.reshape(X.size(dim = 0), -1);
+            
+            pred = model(X);
+            loss = criterion(pred, y);
+            loss.backward();
+            optimizer.step();   
+            epoch_loss += loss.item();
+            correct += (pred.argmax(dim = 1) == y).sum().item()
+            total += X.size(dim = 0)
+
+        val_loss, val_acc = evaluate(model, val_loader, criterion=criterion, device=device,flatten_input=flatten_input);
+        train_loss, train_acc = epoch_loss/len(train_loader), correct/total;
+
+        if epoch % 5 == 4:
+            print(f"Epoch: {epoch}. Train Loss: {train_loss}. Val loss: {val_loss}")
+            print(f"Train: Acc: {train_acc}. Train Loss: {train_loss}")
+            print(f"Val acc: {val_acc}. Val Loss: {val_loss}\n")
+            
+    return model
+
+
 
 
 def get_device() -> torch.device:
