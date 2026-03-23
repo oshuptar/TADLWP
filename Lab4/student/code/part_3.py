@@ -38,9 +38,10 @@ class EdgeDataset(Dataset):
         TODO: Get the input image x from the dataset. Compute target y by applying conv2d with the kernel to x (use padding=1).
         Return the tuple (x, y).
         """
-        x, _ = self.dataset[idx]
+        with torch.no_grad():
+            x, _ = self.dataset[idx]
         #x = x.unsqueeze(dim = 0) # adds a new dimension of size 1 at a chose position
-        y = nn.functional.conv2d(x.unsqueeze(dim = 0), weight=self.kernel, padding=1)
+            y = nn.functional.conv2d(x.unsqueeze(dim = 0), weight=self.kernel, padding=1)
         return x, y.squeeze(0)
 
 
