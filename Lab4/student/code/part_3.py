@@ -11,7 +11,7 @@ class EdgeDetector(nn.Module):
         """
         TODO: Create a Conv2d layer with single input and output channel, and store it as self.conv.
         """
-        self.conv = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3)
+        self.conv = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, padding=1)
 
     def forward(self, x):
         """
