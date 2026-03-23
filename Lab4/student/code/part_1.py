@@ -50,9 +50,7 @@ def evaluate(model, loader, criterion, device, flatten_input=False) -> tuple[flo
             loss += criterion(pred, y).item();
             correct += (pred.argmax(dim = 1) == y).sum().item();
             total += X.size(dim = 0);
-    
-    print("y true:", y.numpy())
-    print("preds :", pred)
+
     val_loss, val_acc = loss/len(loader), correct/total;
     return val_loss, val_acc
 
