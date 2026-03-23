@@ -11,33 +11,40 @@ class EdgeDetector(nn.Module):
         """
         TODO: Create a Conv2d layer with single input and output channel, and store it as self.conv.
         """
-        raise NotImplementedError("TODO: Implement the EdgeDetector model creation")
+        self.conv = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3)
 
     def forward(self, x):
         """
         TODO: Apply the convolutional layer to the input and return the result.
         """
-        raise NotImplementedError("TODO: Implement the forward pass")
+        return self.conv(x)
 
 class EdgeDataset(Dataset):
     def __init__(self, cifar_subset, kernel):
         """
         TODO: Store the cifar_subset and kernel as instance variables (self.dataset and self.kernel).
         """
-        raise NotImplementedError("TODO: Implement the EdgeDataset creation")
+        self.dataset = cifar_subset
+        self.kernel = kernel
 
     def __len__(self):
         """
         TODO: Return the length of the underlying dataset.
         """
-        raise NotImplementedError("TODO: Implement the __len__ method")
+        return len(self.dataset)
 
     def __getitem__(self, idx):
         """
         TODO: Get the input image x from the dataset. Compute target y by applying conv2d with the kernel to x (use padding=1).
         Return the tuple (x, y).
         """
-        raise NotImplementedError("TODO: Implement the __getitem__ method")
+        x, _ = self.dataset[idx]
+        #x = x.unsqueeze(dim = 0) # adds a new dimension of size 1 at a chose position
+        y = nn.functional.conv2d(x.unsqueeze(dim = 0), weight=self.kernel, padding=1)
+        return x, y.squeeze(0)
+
+
+        
 
 
 def vertical_edge_kernel():
