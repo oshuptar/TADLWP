@@ -34,9 +34,9 @@ def word_tokenizer(
     TODO: Implement character-level tokenizer.
     """
     reg_exp = r"\w+|[^\w]"
-    stoi = {token: index for index, token in enumerate(text)}
-    itos = {index: token for index, token in enumerate(text)}
     tokens: List[str] = re.findall(reg_exp, text)
+    stoi = {token: index for index, token in enumerate(tokens)}
+    itos = {index: token for index, token in enumerate(tokens)}
     vocab: List[str] = sorted(list(set(tokens)))
     encode: Callable[[str], List[int]] = lambda text: [stoi[tok] for tok in re.findall(reg_exp, text)]
     decode: Callable[[List[int]], str] = lambda index_list: "".join([itos[index] for index in index_list])
