@@ -25,10 +25,10 @@ class Embedding(nn.Module):
 
     def __init__(self, num_embeddings: int, embedding_dim: int) -> None:
         super().__init__()
-        raise NotImplementedError("TODO: Implement Embedding __init__ (create self.weight parameter).")
+        self.weight: nn.Parameter = nn.Parameter(torch.randn(num_embeddings, embedding_dim) * 0.01)
 
-    def forward(self, idx: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("TODO: Implement Embedding forward (return self.weight[idx]).")
+    def forward(self, token_ids: torch.Tensor) -> torch.Tensor:
+        return self.weight[token_ids]
 
 
 class SinusoidalPositionalEmbedding(nn.Module):
@@ -40,10 +40,17 @@ class SinusoidalPositionalEmbedding(nn.Module):
 
     def __init__(self, block_size: int, n_embd: int) -> None:
         super().__init__()
-        raise NotImplementedError("TODO: Implement SinusoidalPositionalEmbedding __init__ (compute pe, register_buffer).")
+        positional_embeddings = torch.zeros(block_size, n_embd)
+        for position in range(block_size):
+            for index in range(n_embd // 2):
+                denominator = 10000.0 ** (2 * index / n_embd)
+                positional_embeddings[position, 2*index] = math.sin(position/denominator)
+                positional_embeddings[position, 2*index + 1] = math.cos(position/denominator)
+
+        self.register_buffer("positional_embeddings", positional_embeddings) 
 
     def forward(self, pos_idx: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("TODO: Implement SinusoidalPositionalEmbedding forward (return self.pe[pos_idx]).")
+        return self.positional_embeddings[pos_idx, :]
 
 
 class VerySimpleLanguageModel(nn.Module):
@@ -71,8 +78,13 @@ class VerySimpleLanguageModel(nn.Module):
         2. self.blocks, then self.final_head -> logits (batch, seq, vocab_size).
         3. If targets: flatten logits/targets and cross_entropy.
         """
-        raise NotImplementedError("TODO: Implement VerySimpleLanguageModel forward.")
+        
+        #torch.arange(n) creates a tensor containing consecutive integers:
+        token_embeddings = self.token_embedding_table(token_ids)
+        pos_embeddings = self.position_embedding_table(torch.arange(range(seq_len), device=token_ids.device))
+        x = token_embeddings + pos_embeddings
         logits: torch.Tensor = None
+        logits = self.final_head(self.blocks(x))
         loss: Optional[torch.Tensor] = None
         if targets is not None:
             vocab_size: int = logits.shape[2]
