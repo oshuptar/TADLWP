@@ -4,5 +4,5 @@ __pycache__/
 .ipynb_checkpoints/
 *main.ipynb
 **/experiments/
-**/dataset/
-**/data/
+**/dataset/*
+**/data/*

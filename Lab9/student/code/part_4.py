@@ -28,7 +28,16 @@ def ask_nano_gpt(
     TODO: Load checkpoint, loop on input, Question/Answer prompt, generate, print answer.
     """
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    raise NotImplementedError("Implement ask_nano_gpt.")
+    while True:
+        context = ""
+        prompt = input()
+        if input == "": 
+            break 
+        model, config, encode, decode = load_model(checkpoint_path=checkpoint_path, device=device)
+        encoded_prompt = torch.Tensor([encode(context + "Question:" + prompt + "\nAsnwer:")], dtype = torch.long, device = config.device)
+        response = model.generate(encoded_prompt, max_new_tokens=max_new_tokens)
+        context = get_answer(decode(response[0].tolist()))
+        print(context)
 
 
 def main() -> None:

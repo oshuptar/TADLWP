@@ -32,8 +32,8 @@ def create_model(sequence_length: int = 100, num_filters: int = 3, num_classes: 
         nn.Linear(in_features = 32, out_features=num_classes*2),
         nn.ReLU(),
         nn.Linear(in_features = num_classes*2, out_features = num_classes)
-        );
-    return model;
+        )
+    return model
 
 def evaluate(model, loader, criterion, device, flatten_input=False) -> tuple[float, float]:
     model.eval();
